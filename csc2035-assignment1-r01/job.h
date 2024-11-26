@@ -197,18 +197,18 @@ job_t* job_new(pid_t pid, unsigned int id, unsigned int priority,
  * NULL is returned if length of src->label is not MAX_NAME_SIZE - 1.
  * errno is set as specified for job_new.
  */
-job_t* job_copy(job_t* dst, job_t* src);
+job_t* job_copy(job_t* src, job_t* dst);
 
-/* 
+/*
  * job_init(job_t* job)
- * 
+ *
  * If job is not NULL, set the fields of the job pointed to by the job
  * parameter to the following values:
  *      job->pid set to 0
  *      job->id set to 0
  *      job->priority set to 0
  *      job->label set to the PAD_STRING
- * 
+ *
  * If job is NULL, this function has no effect.
  *
  * Parameters:
@@ -218,8 +218,8 @@ void job_init(job_t* job);
 
 /*
  * job_is_equal(job_t* j1, job_t* j2)
- * 
- * Tests whether the two jobs, j1 and j2, are equal. The jobs are considered 
+ *
+ * Tests whether the two jobs, j1 and j2, are equal. The jobs are considered
  * equal if each of their fields is equal
  *
  * Usage:
@@ -239,38 +239,36 @@ void job_init(job_t* job);
  * j2 - pointer to second job to compare
  *
  * Return:
- * True if j1 and j2 are equal: j1->pid == j2->pid and j1->pid == j2->pid and 
+ * True if j1 and j2 are equal: j1->pid == j2->pid and j1->pid == j2->pid and
  * j1->priority == j2->priority and the job labels are equal according to string
  * comparison, false otherwise.
  * Two identical pointers, including two NULL pointers are considered equal.
  */
 bool job_is_equal(job_t* j1, job_t* j2);
- 
+
 /*
- * job_set(job_t* job, pid_t pid, unsigned int id, unsigned int priority, 
+ * job_set(job_t* job, pid_t pid, unsigned int id, unsigned int priority,
  *         const char* label)
- * 
+ *
  * Set the given non-null job with the values for the given pid, id, priority
- * and label. The label is copied to the given job's label field. Calling this 
+ * and label. The label is copied to the given job's label field. Calling this
  * function sets all fields of a job.
  *
  * The properties of the label field are preserved by this function. That is,
  * the job's label field will be a string of length exactly MAX_NAME_SIZE - 1.
- * 
+ *
  * Parameters:
  * job - a non-NULL pointer to the job to update
  * pid - the value to set the job process id to
  * id - the value to set the job id to
  * priority - the value to set the job priority to
  * label - the label to use to set the job. The label field of the job
- *      will start with the given label and be padded or truncated to 
+ *      will start with the given label and be padded or truncated to
  *      string length MAX_NAME_SIZE - 1 as described for job_new
  *
  * Return:
  * On success: the job pointer is returned. If job is NULL, this function has
- * no effect and the NULL pointer is returned. If the fields of the job are 
- * already equal to the pid, id, priority and label parameters to job_set, this
- * function has no effect.
+ * no effect and the NULL pointer is returned.
  *
  * Note: this function does not dynamically allocate memory
  */
@@ -279,73 +277,73 @@ job_t* job_set(job_t* job, pid_t pid, unsigned int id, unsigned int priority,
 
 /*
  * job_to_str(job_t* job, char* str)
- * 
+ *
  * Convert the given job to its string representation of size exactly
  * JOB_STR_SIZE and format specified by JOB_STR_FMT.
- * For example, a job with pid 1, id 2, priority 3 and label 
- * "newjob*************************" will have the following string 
+ * For example, a job with pid 1, id 2, priority 3 and label
+ * "newjob*************************" will have the following string
  * representation:
- *  "pid:0000001,id:00002,priority:00003,label:newjob*************************"
+ *  "pid:0000001,id:00002,pri:00003,label:newjob*************************"
  *
  * Parameters:
- * job - a non-NULL pointer to the job to create a string representation for. 
- *      If the length of the job label is not exactly MAX_NAME_SIZE - 1 
+ * job - a non-NULL pointer to the job to create a string representation for.
+ *      If the length of the job label is not exactly MAX_NAME_SIZE - 1
  *      there is no conversion to string of the job and NULL is returned.
- * str - a char* pointer to a buffer large enough to hold the string 
- *      representation. If str is NUll, a buffer of the size JOB_STR_SIZE is 
+ * str - a char* pointer to a buffer large enough to hold the string
+ *      representation. If str is NUll, a buffer of the size JOB_STR_SIZE is
  *      dynamically allocated.
  *
  * Return:
- * On success: a pointer to the string representation is returned (if str is 
+ * On success: a pointer to the string representation is returned (if str is
  * not NULL, the returned pointer has the same value as the str parameter).
  * If str is NULL, a pointer to a new, dynamically allocated character buffer
  * containing the string representation is returned.
  * On failure: the NULL pointer is returned.
- * 
+ *
  * Errors:
- * If the call fails, the NULL pointer will be returned.  In particular, 
+ * If the call fails, the NULL pointer will be returned.  In particular,
  * NULL is returned if length of job->label is not MAX_NAME_SIZE - 1.
- * If str is NULL, the function may fail because of a failure of dynamic 
+ * If str is NULL, the function may fail because of a failure of dynamic
  * allocation and return NULL.
  */
 char* job_to_str(job_t* job, char* str);
 
 /*
  * str_to_job(char* str, job_t* job)
- * 
+ *
  * Convert the given str that represents a job as specified by JOB_STR_FMT
  * to a job. For example, if str is:
- *  "pid:0000001,id:00002,priority:00003,label:newjob*************************"
+ *  "pid:0000001,id:00002,pri:00003,label:newjob*************************"
  *
- * it will be converted to a job with pid 1, id 2, priority 3 and label 
+ * it will be converted to a job with pid 1, id 2, priority 3 and label
  * "newjob*************************".
  *
  * If job is NULL, the memory for the job is dynamically allocated.
- * If str is NULL or not in the format specified by JOB_STR_FMT then this 
- * function will return NULL and any dynamically allocated memory will be 
+ * If str is NULL or not in the format specified by JOB_STR_FMT then this
+ * function will return NULL and any dynamically allocated memory will be
  * deallocated. In particular, the function returns NULL if str is not length
  * JOB_STR_SIZE - 1 or if the label component of the resulting job is not length
  * MAX_NAME_SIZE - 1.
  *
  * Parameters:
- * str - a non-NULL pointer to a well-formed string representation of a job. 
+ * str - a non-NULL pointer to a well-formed string representation of a job.
  *      If str is NULL or is not the correct length, no conversion to a job
  *      is attempted and NULL is returned.
  * job - a pointer to a job to update with the field values of the str
- *      representation of a job. If job is NULL, a new job is dynamically 
+ *      representation of a job. If job is NULL, a new job is dynamically
  *      allocated for conversion of the string representation to a job.
  *
  * Return:
  * On success: a pointer to the job represented by the given string is returned
- * (which will a pointer with the same value as the job parameter if job is 
+ * (which will a pointer with the same value as the job parameter if job is
  * not NULL). If job is NULL, a pointer to a new, dynamically allocated job
  * corresponding to the string representation is returned.
  * On failure: the NULL pointer is returned.
- * 
+ *
  * Errors:
- * If the call fails, the NULL pointer will be returned.  In particular, 
+ * If the call fails, the NULL pointer will be returned.  In particular,
  * NULL is returned if str is not in the correct format (e.g. is an invalid
- * length, or scanning for the representation of the fields of a job fails, 
+ * length, or scanning for the representation of the fields of a job fails,
  * or the resulting job label is an invalid length).
  * If job is NULL, the function may fail because of a failure of dynamic
  * allocation and return NULL.
@@ -354,15 +352,15 @@ job_t* str_to_job(char* str, job_t* job);
 
 /*
  * job_delete(job_t* job);
- * 
+ *
  * Delete a job struct that has been dynamically allocated by job_new.
  *
  * If job is NULL this function has no effect.
  *
  * Parameters:
- * job - a pointer to a job struct allocated by job_new. 
+ * job - a pointer to a job struct allocated by job_new.
  *
- * Errors: it is an error to pass a pointer to a job that has not been 
+ * Errors: it is an error to pass a pointer to a job that has not been
  * dynamically allocated and this will cause program termination.
  */
 void job_delete(job_t* job);
