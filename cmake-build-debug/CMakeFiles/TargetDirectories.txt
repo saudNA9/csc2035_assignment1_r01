@@ -1,0 +1,3 @@
+C:/Users/saud A/Downloads/csc2035-assignment1-r01/cmake-build-debug/CMakeFiles/csc2035_assignment1_r01.dir
+C:/Users/saud A/Downloads/csc2035-assignment1-r01/cmake-build-debug/CMakeFiles/edit_cache.dir
+C:/Users/saud A/Downloads/csc2035-assignment1-r01/cmake-build-debug/CMakeFiles/rebuild_cache.dir
