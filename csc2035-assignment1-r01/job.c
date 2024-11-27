@@ -1,6 +1,6 @@
 /*
  * Replace the following string of 0s with your student number
- * 000000000
+ * 230266960
  */
 #include <stdlib.h>
 #include <string.h>
@@ -20,34 +20,32 @@ job_t* job_new(pid_t pid, unsigned int id, unsigned int priority,
  * TODO: you must implement this function
  */
 job_t* job_copy(job_t* src, job_t* dst) {
-    if (!src) {
-        return NULL; // Return NULL if the source is NULL
+    // Validate the source job
+    if (!src || strlen(src->label) != MAX_NAME_SIZE - 1) {
+        return NULL; // Return NULL if src is invalid
     }
 
-    // Case 2: If src and dst are the same, no copying needed
+    // If source and destination are the same, no copying needed
     if (src == dst) {
-        return dst; // Return the existing destination
+        return dst;
     }
 
-    // Case 3: If dst is NULL, allocate memory for the new job
+    // Dynamically allocate memory for destination if NULL
     if (!dst) {
-        dst = (job_t*)malloc(sizeof(job_t));
-        if (!dst) {
-            return NULL; // Return NULL if memory allocation fails
-        }
+        dst = malloc(sizeof(job_t));
+
     }
 
-    // Copy the job fields
+    // Copy fields
     dst->pid = src->pid;
     dst->id = src->id;
     dst->priority = src->priority;
-
-    // Use strncpy to safely copy the label, ensuring it is null-terminated
     strncpy(dst->label, src->label, MAX_NAME_SIZE - 1);
     dst->label[MAX_NAME_SIZE - 1] = '\0'; // Ensure null termination
 
-    return dst; // Return the destination job
+    return dst;
 }
+
 
 
 /* 
@@ -80,15 +78,12 @@ bool job_is_equal(job_t* j1, job_t* j2) {
     }
 
     // Compare all fields
-    if (j1->pid == j2->pid &&
-        j1->id == j2->id &&
-        j1->priority == j2->priority &&
-        strncmp(j1->label, j2->label, MAX_NAME_SIZE - 1) == 0) {
-        return true;
-        }
-
-    return false;
+    return (j1->pid == j2->pid &&
+            j1->id == j2->id &&
+            j1->priority == j2->priority &&
+            strncmp(j1->label, j2->label, MAX_NAME_SIZE - 1) == 0);
 }
+
 
 
 /*
@@ -111,16 +106,16 @@ job_t* job_set(job_t* job, pid_t pid, unsigned int id, unsigned int priority,
     // Handle label
     if (label == NULL || label[0] == '\0') {
         // Use PAD_STRING if label is NULL or empty
-        strncpy(job->label, PAD_STRING, MAX_NAME_SIZE - 1);
+        snprintf(job->label, MAX_NAME_SIZE, "%-*s", MAX_NAME_SIZE - 1, PAD_STRING);
     } else {
         size_t len = strlen(label);
         if (len < MAX_NAME_SIZE - 1) {
             // Copy label and pad with '*'
-            strncpy(job->label, label, len);
+            snprintf(job->label, MAX_NAME_SIZE, "%-*.*s", MAX_NAME_SIZE - 1, MAX_NAME_SIZE - 1, label);
             memset(job->label + len, '*', MAX_NAME_SIZE - 1 - len);
         } else {
             // Truncate label
-            strncpy(job->label, label, MAX_NAME_SIZE - 1);
+            snprintf(job->label, MAX_NAME_SIZE, "%.*s", MAX_NAME_SIZE - 1, label);
         }
     }
 
@@ -130,6 +125,7 @@ job_t* job_set(job_t* job, pid_t pid, unsigned int id, unsigned int priority,
     return job;
 }
 
+
 /*
  * TODO: you must implement this function.
  * Hint:
@@ -137,20 +133,20 @@ job_t* job_set(job_t* job, pid_t pid, unsigned int id, unsigned int priority,
  *      and the documentation in job.h for when to do dynamic allocation
  */
 char* job_to_str(job_t* job, char* str) {
-    // Validate the job pointer
+    // Validate the job pointer and label
     if (job == NULL || strlen(job->label) != MAX_NAME_SIZE - 1) {
         return NULL;
     }
 
-    // Allocate memory if str is NULL
+    // Dynamically allocate memory if str is NULL
     if (str == NULL) {
-        str = (char*)malloc(JOB_STR_SIZE);
+        str = (char*)calloc(JOB_STR_SIZE, sizeof(char)); // Zero-initialize memory
         if (str == NULL) {
-            return NULL; // Memory allocation failed
+            return NULL; // Allocation failure
         }
     }
 
-    // Format the job's data into the string
+    // Format the job's fields into the string
     snprintf(
         str,
         JOB_STR_SIZE,
@@ -164,40 +160,45 @@ char* job_to_str(job_t* job, char* str) {
     return str;
 }
 
+
 /*
  * TODO: you must implement this function.
  * Hint:
  * - see the hint for job_to_str
  */
 job_t* str_to_job(char* str, job_t* job) {
-    // Check if the input string is NULL or of incorrect length
+    // Validate the input string
     if (!str || strlen(str) != JOB_STR_SIZE - 1) {
         return NULL;
     }
 
-    // Dynamically allocate memory for job if it is NULL
+    // Allocate memory for job if job is NULL
+    bool allocated = false;
     if (!job) {
         job = malloc(sizeof(job_t));
         if (!job) {
             return NULL; // Memory allocation failed
         }
+        allocated = true;
     }
 
     // Parse the string into the job fields
     int parsed = sscanf(str, JOB_STR_FMT, &job->pid, &job->id, &job->priority, job->label);
     if (parsed != 4) {
-        if (!job) free(job); // Free allocated memory if parsing fails
+        if (allocated) free(job); // Free allocated memory on failure
         return NULL;
     }
 
-    // Ensure the label field is correctly padded/truncated
-    if (strlen(job->label) != MAX_NAME_SIZE - 1) {
-        if (!job) free(job); // Free allocated memory
-        return NULL;
+    // Ensure label is correctly padded/truncated
+    size_t label_len = strlen(job->label);
+    if (label_len < MAX_NAME_SIZE - 1) {
+        memset(job->label + label_len, '*', MAX_NAME_SIZE - 1 - label_len);
     }
+    job->label[MAX_NAME_SIZE - 1] = '\0'; // Ensure null-termination
 
     return job;
 }
+
 
 
 /* 
