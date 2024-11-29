@@ -69,30 +69,26 @@ int joblog_init(proc_t* proc) {
  * - see job.h for a function to create a job from its string representation
  */
 job_t* joblog_read(proc_t* proc, int entry_num, job_t* job) {
-    int old_errno = errno; // Preserve errno
+    int old_errno = errno;
 
-    // Validate parameters
     if (!proc || entry_num < 0) {
         errno = old_errno;
         return NULL;
     }
 
-    // Generate the log file name
     char* log_name = new_log_name(proc);
     if (!log_name) {
         errno = old_errno;
         return NULL;
     }
 
-    // Open log file
     FILE* log_file = fopen(log_name, "r");
-    free(log_name); // Free dynamically allocated log name
+    free(log_name);
     if (!log_file) {
         errno = old_errno;
         return NULL;
     }
 
-    // Allocate job if not provided
     bool dynamically_allocated = false;
     if (!job) {
         job = malloc(sizeof(job_t));
@@ -104,27 +100,29 @@ job_t* joblog_read(proc_t* proc, int entry_num, job_t* job) {
         dynamically_allocated = true;
     }
 
-    // Locate the desired entry in the log
-    char line[JOB_STR_SIZE + 1]; // Add +1 for potential newline
+    char line[JOB_STR_SIZE + 1];
     int current_line = 0;
 
     while (fgets(line, sizeof(line), log_file)) {
-        // Strip newline character if present
-        size_t len = strlen(line);
-        if (line[len - 1] == '\n') {
-            line[len - 1] = '\0';
+
+        int len = 0;
+        while (line[len] != '\0' && line[len] != '\n' && len < JOB_STR_SIZE) {
+            len++;
+        }
+        if (line[len] == '\n') {
+            line[len] = '\0';
         }
 
         if (current_line == entry_num) {
-            // Ensure the line matches the expected format
-            if (strlen(line) != JOB_STR_SIZE - 1) {
+
+            if (len != JOB_STR_SIZE - 1) {
                 if (dynamically_allocated) free(job);
                 fclose(log_file);
                 errno = old_errno;
                 return NULL;
             }
 
-            // Convert string to job structure
+
             if (!str_to_job(line, job)) {
                 if (dynamically_allocated) free(job);
                 fclose(log_file);
@@ -133,16 +131,16 @@ job_t* joblog_read(proc_t* proc, int entry_num, job_t* job) {
             }
 
             fclose(log_file);
-            return job; // Successfully read the job
+            return job;
         }
         current_line++;
     }
 
-    // Entry_num exceeds the number of lines in the log
+
     if (dynamically_allocated) free(job);
     fclose(log_file);
     errno = old_errno;
-    return NULL; // Entry not found
+    return NULL;
 }
 
 
@@ -155,46 +153,38 @@ job_t* joblog_read(proc_t* proc, int entry_num, job_t* job) {
  * - see the hint for joblog_read
  */
 void joblog_write(proc_t* proc, job_t* job) {
-    // Preserve the current errno value
     int old_errno = errno;
 
-    // Validate parameters
     if (!proc || !job) {
         errno = old_errno;
         return;
     }
 
-    // Generate the log file name
     char* log_name = new_log_name(proc);
     if (!log_name) {
         errno = old_errno;
         return;
     }
 
-    // Open the log file in append mode
     FILE* log_file = fopen(log_name, "a");
-    free(log_name); // Clean up dynamically allocated log name
+    free(log_name);
     if (!log_file) {
         errno = old_errno;
         return;
     }
 
-    // Convert the job to its string representation
     char job_str[JOB_STR_SIZE];
     if (!job_to_str(job, job_str)) {
-        // If conversion fails, clean up and return
+
         fclose(log_file);
         errno = old_errno;
         return;
     }
 
-    // Append the job entry to the log file
     fprintf(log_file, "%s\n", job_str);
 
-    // Clean up
     fclose(log_file);
 
-    // Restore the original errno
     errno = old_errno;
 }
 
@@ -204,24 +194,19 @@ void joblog_write(proc_t* proc, job_t* job) {
  */
 void joblog_delete(proc_t* proc) {
     if (!proc) {
-        return; // Do nothing if proc is NULL
+        return;
     }
 
-    // Generate the log file name
     char* log_name = new_log_name(proc);
     if (!log_name) {
-        return; // Do nothing if log name generation failed
+        return;
     }
 
-    // Preserve the current value of errno
     int saved_errno = errno;
 
-    // Attempt to delete the file
     unlink(log_name);
 
-    // Restore the previous value of errno
     errno = saved_errno;
 
-    // Free the dynamically allocated log name
     free(log_name);
 }
