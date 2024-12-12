@@ -13,7 +13,6 @@
  * - see job_new in job.c
  */
 pri_jobqueue_t* pri_jobqueue_new() {
-    // Allocate memory for the queue
     pri_jobqueue_t* pjq = malloc(sizeof(pri_jobqueue_t));
     if (!pjq) {
         return NULL;
