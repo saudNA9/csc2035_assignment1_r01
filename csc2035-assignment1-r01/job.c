@@ -30,17 +30,20 @@ job_t* job_copy(job_t* src, job_t* dst) {
 
     if (!dst) {
         dst = malloc(sizeof(job_t));
-
+        if (!dst) {
+            return NULL;
+        }
     }
 
     dst->pid = src->pid;
     dst->id = src->id;
     dst->priority = src->priority;
     strncpy(dst->label, src->label, MAX_NAME_SIZE - 1);
-    dst->label[MAX_NAME_SIZE - 1] = '\0'; // Ensure null termination
+    dst->label[MAX_NAME_SIZE - 1] = '\0';
 
     return dst;
 }
+
 
 
 
@@ -68,6 +71,10 @@ bool job_is_equal(job_t* j1, job_t* j2) {
         return true;
     }
     if (j1 == NULL || j2 == NULL) {
+        return false;
+    }
+
+    if (j1->label[MAX_NAME_SIZE - 1] != '\0' || j2->label[MAX_NAME_SIZE - 1] != '\0') {
         return false;
     }
 
@@ -125,7 +132,7 @@ char* job_to_str(job_t* job, char* str) {
     }
 
     if (str == NULL) {
-        str = (char*)calloc(JOB_STR_SIZE, sizeof(char)); // Zero-initialize memory
+        str = (char*)calloc(JOB_STR_SIZE, sizeof(char));
         if (str == NULL) {
             return NULL;
         }
